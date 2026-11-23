@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f62fe" />
+    <meta name="description" content="SPSS Statistics — olah data survei, uji validitas dan reliabilitas, korelasi, dan regresi langsung di browser. Panduan lengkap kegunaan dan cara kerja SPSS." />
+    <title>SPSS Statistics — Olah Data, Temukan Keputusan</title>
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="apple-touch-icon" href="/icon-192.png" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').catch(() => {});
+        });
+      }
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

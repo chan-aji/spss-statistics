@@ -1,0 +1,4 @@
+node_modules
+.chrome-verify
+.chrome-qa
+*.png
