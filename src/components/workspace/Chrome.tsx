@@ -380,6 +380,20 @@ function buildMenus(
       ],
     },
     {
+      label: 'AI Agent',
+      items: [
+        { label: 'Buka AI Co-Pilot Panel…', action: 'agent.toggle', shortcut: 'Ctrl+Shift+A' },
+        { divider: true },
+        { label: 'Jalankan Analisis Skripsi Lengkap (Otomatis)', action: 'agent.auto.thesis' },
+        { label: 'Uji Validitas & Reliabilitas Kuesioner', action: 'agent.auto.validity' },
+        { label: 'Uji 4 Asumsi Klasik Regresi', action: 'agent.auto.assumptions' },
+        { label: 'Regresi Linier Berganda & Uji Hipotesis', action: 'agent.auto.regression' },
+        { divider: true },
+        { label: 'Salin Seluruh Output ke Dokumen Word', action: 'file.export.output' },
+        { label: 'Informasi Integrasi MCP Server Antigravity…', action: 'agent.mcp.guide' },
+      ],
+    },
+    {
       label: 'Window',
       items: [
         { label: 'Data Editor', action: 'view.data', checked: true },
@@ -547,6 +561,9 @@ export function Toolbar({ onAction }: { onAction: (action: string) => void }) {
       </button>
       <button className="tool-text-btn" onClick={() => onAction('transform.compute')} title="Compute Variable (Hitung Skor Total)">
         <Icon name="spark" size={16} /> Compute…
+      </button>
+      <button className="tool-ai-btn" onClick={() => onAction('agent.toggle')} title="Buka Asisten AI SPSS Co-Pilot (MCP Agent - Analisis Otomatis)">
+        <Icon name="spark" size={16} /> <strong>AI Agent</strong>
       </button>
       <div className="toolbar-spacer" />
       <label className="toolbar-search">

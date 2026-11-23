@@ -1,0 +1,26 @@
+{
+  "name": "spss-statistics-mcp",
+  "version": "1.0.0",
+  "description": "Model Context Protocol (MCP) server for SPSS Statistics analysis, regression, hypothesis testing, and academic thesis exports",
+  "main": "index.mjs",
+  "type": "module",
+  "bin": {
+    "spss-mcp": "./index.mjs"
+  },
+  "scripts": {
+    "start": "node index.mjs",
+    "test": "node test.mjs"
+  },
+  "keywords": [
+    "mcp",
+    "spss",
+    "statistics",
+    "regression",
+    "anova",
+    "t-test",
+    "skripsi",
+    "ai-agent"
+  ],
+  "author": "Antigravity DeepMind / chan-aji",
+  "license": "MIT"
+}

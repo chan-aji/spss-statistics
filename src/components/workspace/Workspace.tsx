@@ -20,6 +20,7 @@ import {
   BinaryLogisticDialog, TwoWayAnovaDialog, FactorAnalysisDialog, SaveLocationModal, ReplaceDialog,
 } from './Dialogs'
 import QuickGuide from './QuickGuide'
+import { AIAgentPanel } from './AIAgentPanel'
 import { Icon } from '../Icons'
 import './workspace.css'
 
@@ -192,6 +193,7 @@ export default function Workspace() {
   const [redoStack, setRedoStack] = useState<Dataset[]>([])
   const [saveLocationModal, setSaveLocationModal] = useState<{ fileName: string; locationText: string; formatText: string } | null>(null)
   const [syntaxDraft, setSyntaxDraft] = useState<string>('')
+  const [aiOpen, setAiOpen] = useState(false)
   const toastTimer = useRef<number | undefined>(undefined)
   const fileRef = useRef<HTMLInputElement>(null)
 
@@ -970,6 +972,47 @@ export default function Workspace() {
         })
         break
       case 'help.about': setDialog('about'); break
+      case 'agent.toggle':
+        setAiOpen((prev) => !prev)
+        break
+      case 'agent.auto.thesis':
+        setAiOpen(true)
+        runSample('descriptives')
+        runSample('validity')
+        runSample('reliability')
+        runSample('assumptions')
+        runSample('regression')
+        setView('output')
+        toast('Analisis Skripsi Lengkap selesai dijalankan oleh Agent AI!')
+        break
+      case 'agent.auto.validity':
+        setAiOpen(true)
+        runSample('validity')
+        runSample('reliability')
+        setView('output')
+        toast('Uji Validitas dan Reliabilitas selesai!')
+        break
+      case 'agent.auto.assumptions':
+        setAiOpen(true)
+        runSample('assumptions')
+        setView('output')
+        toast('Uji 4 Asumsi Klasik selesai!')
+        break
+      case 'agent.auto.regression':
+        setAiOpen(true)
+        runSample('regression')
+        setView('output')
+        toast('Regresi Linier Berganda selesai!')
+        break
+      case 'agent.mcp.guide':
+        setInfo({
+          title: 'Integrasi MCP (Model Context Protocol) & AI Agent',
+          message: 'IBM SPSS Statistics Recreation ini telah dilengkapi dua jalur AI Agent:\n\n' +
+            '1. AI Co-Pilot In-Page (Panel Kanan): Anda dapat mengetik instruksi langsung, mengklik tombol aksi cepat 1-klik, dan membiarkan agent menjalankan analisis statistik serta menyusun pembahasan Bab IV secara otomatis.\n\n' +
+            '2. Global Programmatic API (window.__SPSS_AGENT_API__): AI Agent eksternal (seperti Antigravity, Puppeteer, Playwright, atau Chrome DevTools) dapat membaca dataset, memicu kalkulasi regresi/t-test/validitas, dan mengekspor dokumen Word secara instan.\n\n' +
+            '3. Dedicated MCP Server: Terletak di d:\\spss\\mcp-server dengan protokol JSON-RPC stdio standar untuk dihubungkan ke Claude Desktop, Cursor, atau Antigravity.',
+        })
+        break
       default:
         if (action.startsWith('placeholder:')) {
           const name = action.replace('placeholder:', '')
@@ -1007,10 +1050,86 @@ export default function Workspace() {
       else if (key === 'r') { e.preventDefault(); runSyntaxText(syntaxDraft || syntaxHistory.join('\n\n')) }
       else if (key === 'n') { e.preventDefault(); resetTo(emptyDataset(), 'Dataset kosong dibuat.') }
       else if (key === 'p') { e.preventDefault(); printOutput() }
+      else if (e.shiftKey && key === 'a') { e.preventDefault(); setAiOpen((prev) => !prev) }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   })
+
+  useEffect(() => {
+    (window as any).__SPSS_AGENT_API__ = {
+      version: '1.0.0',
+      getDataset: () => dataset,
+      setDataset: (next: Dataset) => {
+        pushUndo()
+        setDataset(next)
+      },
+      getVariables: () => dataset.variables,
+      getOutputs: () => outputs,
+      getView: () => view,
+      setView: (v: View) => setView(v),
+      runAnalysis: (kind: string) => {
+        runSample(kind)
+      },
+      runCustomResult: (res: AnalysisResult) => {
+        runResult(res)
+      },
+      computeVariable: (target: string, label: string, expression: string) => {
+        handleCompute(target, label, expression)
+      },
+      exportWord: () => exportOutput(),
+      exportPdf: () => printOutput(),
+      toggleAIPanel: (open?: boolean) => {
+        setAiOpen((prev) => (open !== undefined ? open : !prev))
+      },
+      executeInstruction: (query: string) => {
+        const q = query.toLowerCase()
+        if (q.includes('skripsi') || q.includes('lengkap') || q.includes('semua uji')) {
+          runSample('descriptives')
+          runSample('validity')
+          runSample('reliability')
+          runSample('assumptions')
+          runSample('regression')
+          setView('output')
+          return { success: true, message: 'Analisis skripsi lengkap dieksekusi.' }
+        }
+        if (q.includes('validitas') || q.includes('reliabilitas')) {
+          runSample('validity')
+          runSample('reliability')
+          setView('output')
+          return { success: true, message: 'Uji validitas & reliabilitas dieksekusi.' }
+        }
+        if (q.includes('asumsi') || q.includes('normalitas') || q.includes('hetero') || q.includes('kolin')) {
+          runSample('assumptions')
+          setView('output')
+          return { success: true, message: 'Uji asumsi klasik dieksekusi.' }
+        }
+        if (q.includes('regresi') || q.includes('pengaruh') || q.includes('prediktor')) {
+          runSample('regression')
+          setView('output')
+          return { success: true, message: 'Regresi linier berganda dieksekusi.' }
+        }
+        if (q.includes('t test') || q.includes('t-test') || q.includes('uji beda')) {
+          runSample('independent')
+          setView('output')
+          return { success: true, message: 'Independent Samples T-Test dieksekusi.' }
+        }
+        if (q.includes('anova')) {
+          runSample('anova')
+          setView('output')
+          return { success: true, message: 'One-Way ANOVA dieksekusi.' }
+        }
+        if (q.includes('word') || q.includes('ekspor') || q.includes('salin')) {
+          exportOutput()
+          return { success: true, message: 'Ekspor Word dieksekusi.' }
+        }
+        return { success: false, message: 'Instruksi tidak dikenali.' }
+      },
+    }
+    return () => {
+      delete (window as any).__SPSS_AGENT_API__
+    }
+  }, [dataset, outputs, view])
 
   const viewTitle = view === 'output' ? 'SPSS Statistics Viewer' : view === 'syntax' ? 'SPSS Syntax Editor' : 'IBM SPSS Statistics Data Editor'
   const activeVar = dataset.variables[0]
@@ -1033,7 +1152,8 @@ export default function Workspace() {
       />
       <Toolbar onAction={handleAction} />
 
-      <div className="spss-main">
+      <div className="spss-workspace-layout">
+        <div className="spss-main">
         {view === 'data' && (
           <>
             {showHint && (
@@ -1124,6 +1244,19 @@ export default function Workspace() {
               />
             </div>
           </div>
+        )}
+        </div>
+
+        {aiOpen && (
+          <AIAgentPanel
+            dataset={dataset}
+            setDataset={setDataset}
+            runResult={runResult}
+            outputs={outputs}
+            setView={setView}
+            onExportWord={exportOutput}
+            onClose={() => setAiOpen(false)}
+          />
         )}
       </div>
 
